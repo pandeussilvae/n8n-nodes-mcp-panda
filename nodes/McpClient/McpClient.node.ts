@@ -12,7 +12,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
-import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types';
+import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
 
 // Add Node.js process type declaration
 declare const process: {
