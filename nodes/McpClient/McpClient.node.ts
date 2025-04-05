@@ -12,6 +12,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
+import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types';
 
 // Add Node.js process type declaration
 declare const process: {
@@ -431,6 +432,9 @@ export class McpClient implements INodeType {
 									const result = await client.callTool({
 										name: tool.name,
 										arguments: params,
+									}, CallToolResultSchema, {
+										// TODO: Support these options using the N8N's Node Config UI
+										resetTimeoutOnProgress: true,
 									});
 
 									return typeof result === 'object' ? JSON.stringify(result) : String(result);
@@ -533,6 +537,9 @@ export class McpClient implements INodeType {
 						const result = await client.callTool({
 							name: toolName,
 							arguments: toolParams,
+						}, CallToolResultSchema, {
+							// TODO: Support these options using the N8N's Node Config UI
+							resetTimeoutOnProgress: true,
 						});
 
 						this.logger.debug(`Tool executed successfully: ${JSON.stringify(result)}`);
