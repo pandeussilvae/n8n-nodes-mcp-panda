@@ -434,7 +434,7 @@ export class McpClient implements INodeType {
 										arguments: params,
 									}, CallToolResultSchema, {
 										// TODO: Support these options using the N8N's Node Config UI
-										resetTimeoutOnProgress: true,
+										// resetTimeoutOnProgress: true,
 									});
 
 									return typeof result === 'object' ? JSON.stringify(result) : String(result);
@@ -539,7 +539,7 @@ export class McpClient implements INodeType {
 							arguments: toolParams,
 						}, CallToolResultSchema, {
 							// TODO: Support these options using the N8N's Node Config UI
-							resetTimeoutOnProgress: true,
+							// resetTimeoutOnProgress: true,
 						});
 
 						this.logger.debug(`Tool executed successfully: ${JSON.stringify(result)}`);
