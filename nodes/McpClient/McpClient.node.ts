@@ -184,6 +184,7 @@ export class McpClient implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const returnData: INodeExecutionData[] = [];
 		const operation = this.getNodeParameter('operation', 0) as string;
+		let transport: Transport | undefined;
 
 		// For backward compatibility - if connectionType isn't set, default to 'cmd'
 		let connectionType = 'cmd';
@@ -195,7 +196,6 @@ export class McpClient implements INodeType {
 		}
 
 		try {
-			let transport: Transport;
 
 			if (connectionType === 'sse') {
 				// Use SSE transport
@@ -585,6 +585,10 @@ export class McpClient implements INodeType {
 				this.getNode(),
 				`Failed to execute operation: ${(error as Error).message}`,
 			);
+		} finally {
+			if (transport) {
+				await transport.close();
+			}
 		}
 	}
 }
