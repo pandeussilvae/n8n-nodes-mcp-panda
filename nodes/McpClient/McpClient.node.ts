@@ -10,6 +10,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { RequestOptions } from '@modelcontextprotocol/sdk/shared/protocol';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
@@ -194,6 +195,7 @@ export class McpClient implements INodeType {
 			// If connectionType parameter doesn't exist, keep default 'cmd'
 			this.logger.debug('ConnectionType parameter not found, using default "cmd" transport');
 		}
+		let timeout = 600000;
 
 		try {
 
@@ -206,6 +208,7 @@ export class McpClient implements INodeType {
 
 				const sseUrl = sseCredentials.sseUrl as string;
 				const messagesPostEndpoint = (sseCredentials.messagesPostEndpoint as string) || '';
+				timeout = sseCredentials.sseTimeout as number || 60000;
 
 				// Parse headers
 				let headers: Record<string, string> = {};
@@ -324,7 +327,7 @@ export class McpClient implements INodeType {
 			);
 
 			try {
-				await client.connect(transport);
+                await client.connect(transport);
 				this.logger.debug('Client connected to MCP server');
 			} catch (connectionError) {
 				this.logger.error(`MCP client connection error: ${(connectionError as Error).message}`);
@@ -333,6 +336,10 @@ export class McpClient implements INodeType {
 					`Failed to connect to MCP server: ${(connectionError as Error).message}`,
 				);
 			}
+
+			// Create a RequestOptions object from environment variables
+			const requestOptions: RequestOptions = {};
+			requestOptions.timeout = timeout;
 
 			switch (operation) {
 				case 'listResources': {
@@ -439,10 +446,7 @@ export class McpClient implements INodeType {
 									const result = await client.callTool({
 										name: tool.name,
 										arguments: params,
-									}, CallToolResultSchema, {
-										// TODO: Support these options using the N8N's Node Config UI
-										// resetTimeoutOnProgress: true,
-									});
+									}, CallToolResultSchema, requestOptions);
 
 									return typeof result === 'object' ? JSON.stringify(result) : String(result);
 								} catch (error) {
@@ -543,10 +547,7 @@ export class McpClient implements INodeType {
 						const result = await client.callTool({
 							name: toolName,
 							arguments: toolParams,
-						}, CallToolResultSchema, {
-							// TODO: Support these options using the N8N's Node Config UI
-							// resetTimeoutOnProgress: true,
-						});
+						}, CallToolResultSchema, requestOptions);
 
 						this.logger.debug(`Tool executed successfully: ${JSON.stringify(result)}`);
 
