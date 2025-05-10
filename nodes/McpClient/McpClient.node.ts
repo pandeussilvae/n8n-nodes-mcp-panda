@@ -8,7 +8,6 @@ import {
 } from 'n8n-workflow';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { RequestOptions } from '@modelcontextprotocol/sdk/shared/protocol';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -218,7 +217,7 @@ export class McpClient implements INodeType {
 				const httpCredentials = await this.getCredentials('mcpClientHttpApi');
 
 				// Dynamically import the HTTP client
-				const { StreamableHttpTransport } = await import('@modelcontextprotocol/sdk/server/streamableHttp.js');
+				const { StreamableHTTPClientTransport } = await import('@modelcontextprotocol/sdk/client/streamableHttp.js');
 
 				const httpStreamUrl = httpCredentials.httpStreamUrl as string;
 				const messagesPostEndpoint = (httpCredentials.messagesPostEndpoint as string) || '';
@@ -243,19 +242,14 @@ export class McpClient implements INodeType {
 					}
 				}
 
-				// Create HTTP Stream transport
-				transport = new StreamableHttpTransport(
+				const requestInit: RequestInit = { headers };
+				if (messagesPostEndpoint) {
+					(requestInit as any).endpoint = new URL(messagesPostEndpoint);
+				}
+
+				transport = new StreamableHTTPClientTransport(
 					new URL(httpStreamUrl),
-					{
-						requestInit: {
-							headers,
-							...(messagesPostEndpoint
-								? {
-									endpoint: new URL(messagesPostEndpoint),
-								}
-								: {}),
-						},
-					},
+					{ requestInit }
 				);
 			} else if (connectionType === 'sse') {
 				// Use SSE transport
@@ -526,7 +520,7 @@ export class McpClient implements INodeType {
 							tools: aiTools.map((t: DynamicStructuredTool) => ({
 								name: t.name,
 								description: t.description,
-								schema: zodToJsonSchema(t.schema || {}),
+								schema: t.schema || z.object({}),
 							})),
 						},
 					});
