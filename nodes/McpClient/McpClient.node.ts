@@ -8,6 +8,7 @@ import {
 } from 'n8n-workflow';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { RequestOptions } from '@modelcontextprotocol/sdk/shared/protocol';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -520,7 +521,7 @@ export class McpClient implements INodeType {
 							tools: aiTools.map((t: DynamicStructuredTool) => ({
 								name: t.name,
 								description: t.description,
-								schema: t.schema || z.object({}),
+								schema: t.schema ? zodToJsonSchema(t.schema) : {},
 							})),
 						},
 					});
