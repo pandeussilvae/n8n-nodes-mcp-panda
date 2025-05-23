@@ -521,7 +521,7 @@ export class McpClient implements INodeType {
 							tools: aiTools.map((t: DynamicStructuredTool) => ({
 								name: t.name,
 								description: t.description,
-								schema: t.schema ? zodToJsonSchema(t.schema) : {},
+								schema: t.schema ? zodToJsonSchema(t.schema as z.ZodType) : {},
 							})),
 						},
 					});
