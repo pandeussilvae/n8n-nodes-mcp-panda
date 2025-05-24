@@ -439,6 +439,7 @@ export class McpClient implements INodeType {
 					}
 
 					const aiTools = tools.map((tool: any) => {
+						// Create a DynamicStructuredTool for execution
 						const paramSchema = tool.inputSchema?.properties
 							? z.object(
 								Object.entries(tool.inputSchema.properties).reduce(
@@ -518,10 +519,10 @@ export class McpClient implements INodeType {
 
 					returnData.push({
 						json: {
-							tools: aiTools.map((t: DynamicStructuredTool) => ({
-								name: t.name,
-								description: t.description,
-								schema: t.schema ? zodToJsonSchema(t.schema as z.ZodType) : {},
+							tools: tools.map((tool: any) => ({
+								name: tool.name,
+								description: tool.description,
+								schema: tool.inputSchema || {},
 							})),
 						},
 					});
