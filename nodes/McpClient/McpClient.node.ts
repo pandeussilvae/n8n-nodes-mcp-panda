@@ -460,118 +460,59 @@ export class McpClient implements INodeType {
 					// Create tools for execution
 					tools.forEach((tool: any) => {
 						const paramSchema = tool.inputSchema?.properties
-							? z.union([
-								z.object({
-									name: z.string(),
-									Tool_Parameters: z.object(
-										Object.entries(tool.inputSchema.properties).reduce(
-											(acc: any, [key, prop]: [string, any]) => {
-												let zodType: z.ZodType;
+							? z.object({
+								name: z.string(),
+								...Object.entries(tool.inputSchema.properties).reduce(
+									(acc: any, [key, prop]: [string, any]) => {
+										let zodType: z.ZodType;
 
-												switch (prop.type) {
-													case 'string':
-														zodType = z.string();
-														break;
-													case 'number':
-														zodType = z.number();
-														break;
-													case 'integer':
-														zodType = z.number().int();
-														break;
-													case 'boolean':
-														zodType = z.boolean();
-														break;
-													case 'array':
-														if (prop.items?.type === 'string') {
-															zodType = z.array(z.string());
-														} else if (prop.items?.type === 'number') {
-															zodType = z.array(z.number());
-														} else if (prop.items?.type === 'boolean') {
-															zodType = z.array(z.boolean());
-														} else {
-															zodType = z.array(z.any());
-														}
-														break;
-													case 'object':
-														zodType = z.record(z.string(), z.any());
-														break;
-													default:
-														zodType = z.any();
+										switch (prop.type) {
+											case 'string':
+												zodType = z.string();
+												break;
+											case 'number':
+												zodType = z.number();
+												break;
+											case 'integer':
+												zodType = z.number().int();
+												break;
+											case 'boolean':
+												zodType = z.boolean();
+												break;
+											case 'array':
+												if (prop.items?.type === 'string') {
+													zodType = z.array(z.string());
+												} else if (prop.items?.type === 'number') {
+													zodType = z.array(z.number());
+												} else if (prop.items?.type === 'boolean') {
+													zodType = z.array(z.boolean());
+												} else {
+													zodType = z.array(z.any());
 												}
+												break;
+											case 'object':
+												zodType = z.record(z.string(), z.any());
+												break;
+											default:
+												zodType = z.any();
+										}
 
-												if (prop.description) {
-													zodType = zodType.describe(prop.description);
-												}
+										if (prop.description) {
+											zodType = zodType.describe(prop.description);
+										}
 
-												if (!tool.inputSchema?.required?.includes(key)) {
-													zodType = zodType.optional();
-												}
+										if (!tool.inputSchema?.required?.includes(key)) {
+											zodType = zodType.optional();
+										}
 
-												return {
-													...acc,
-													[key]: zodType,
-												};
-											},
-											{},
-										),
-									),
-								}),
-								z.object({
-									name: z.string(),
-									params: z.object(
-										Object.entries(tool.inputSchema.properties).reduce(
-											(acc: any, [key, prop]: [string, any]) => {
-												let zodType: z.ZodType;
-
-												switch (prop.type) {
-													case 'string':
-														zodType = z.string();
-														break;
-													case 'number':
-														zodType = z.number();
-														break;
-													case 'integer':
-														zodType = z.number().int();
-														break;
-													case 'boolean':
-														zodType = z.boolean();
-														break;
-													case 'array':
-														if (prop.items?.type === 'string') {
-															zodType = z.array(z.string());
-														} else if (prop.items?.type === 'number') {
-															zodType = z.array(z.number());
-														} else if (prop.items?.type === 'boolean') {
-															zodType = z.array(z.boolean());
-														} else {
-															zodType = z.array(z.any());
-														}
-														break;
-													case 'object':
-														zodType = z.record(z.string(), z.any());
-														break;
-													default:
-														zodType = z.any();
-												}
-
-												if (prop.description) {
-													zodType = zodType.describe(prop.description);
-												}
-
-												if (!tool.inputSchema?.required?.includes(key)) {
-													zodType = zodType.optional();
-												}
-
-												return {
-													...acc,
-													[key]: zodType,
-												};
-											},
-											{},
-										),
-									),
-								}),
-							])
+										return {
+											...acc,
+											[key]: zodType,
+										};
+									},
+									{},
+								),
+							})
 							: z.object({});
 
 						new DynamicStructuredTool({
@@ -585,17 +526,9 @@ export class McpClient implements INodeType {
 
 									// Handle different parameter structures
 									if (params && typeof params === 'object') {
-										if ('Tool_Parameters' in params) {
-											toolParams = params.Tool_Parameters;
-										} else if ('tool_parameters' in params) {
-											toolParams = params.tool_parameters;
-										} else if ('parameters' in params) {
-											toolParams = params.parameters;
-										} else if ('params' in params && 'name' in params) {
-											toolParams = params.params;
-										} else {
-											toolParams = params;
-										}
+										// Remove the name field as it's not part of the tool parameters
+										const { name, ...rest } = params;
+										toolParams = rest;
 									} else {
 										toolParams = {};
 									}
