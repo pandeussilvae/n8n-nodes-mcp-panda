@@ -518,11 +518,33 @@ export class McpClient implements INodeType {
 							name: tool.name,
 							description: tool.description || `Execute the ${tool.name} tool`,
 							schema: paramSchema,
-							func: async (params) => {
+							func: async (params: any) => {
 								try {
+									// Extract the actual parameters from the AI Agent's input structure
+									let toolParams: any;
+
+									// Handle different parameter structures
+									if (params && typeof params === 'object') {
+										if ('Tool_Parameters' in params) {
+											toolParams = params.Tool_Parameters;
+										} else if ('tool_parameters' in params) {
+											toolParams = params.tool_parameters;
+										} else if ('parameters' in params) {
+											toolParams = params.parameters;
+										} else {
+											toolParams = params;
+										}
+									} else {
+										toolParams = {};
+									}
+
+									// Log the received parameters for debugging
+									this.logger.debug(`Received parameters for ${tool.name}: ${JSON.stringify(params, null, 2)}`);
+									this.logger.debug(`Extracted tool parameters: ${JSON.stringify(toolParams, null, 2)}`);
+
 									const result = await client.callTool({
 										name: tool.name,
-										arguments: params,
+										arguments: toolParams,
 									}, CallToolResultSchema, requestOptions);
 
 									return result;
