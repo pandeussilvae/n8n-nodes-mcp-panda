@@ -460,8 +460,8 @@ export class McpClient implements INodeType {
 					// Log the tools for debugging
 					this.logger.debug(`Received tools: ${JSON.stringify(tools, null, 2)}`);
 
-					const aiTools = tools.map((tool: any) => {
-						// Create a DynamicStructuredTool for execution
+					// Create tools for execution
+					tools.forEach((tool: any) => {
 						const paramSchema = tool.inputSchema?.properties
 							? z.object(
 								Object.entries(tool.inputSchema.properties).reduce(
@@ -517,7 +517,7 @@ export class McpClient implements INodeType {
 							)
 							: z.object({});
 
-						return new DynamicStructuredTool({
+						new DynamicStructuredTool({
 							name: tool.name,
 							description: tool.description || `Execute the ${tool.name} tool`,
 							schema: paramSchema,
