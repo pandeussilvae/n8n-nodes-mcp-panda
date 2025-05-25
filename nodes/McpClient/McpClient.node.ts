@@ -460,113 +460,118 @@ export class McpClient implements INodeType {
 					// Create tools for execution
 					tools.forEach((tool: any) => {
 						const paramSchema = tool.inputSchema?.properties
-							? z.object({
-								name: z.string(),
-								Tool_Parameters: z.object(
-									Object.entries(tool.inputSchema.properties).reduce(
-										(acc: any, [key, prop]: [string, any]) => {
-											let zodType: z.ZodType;
+							? z.union([
+								z.object({
+									name: z.string(),
+									Tool_Parameters: z.object(
+										Object.entries(tool.inputSchema.properties).reduce(
+											(acc: any, [key, prop]: [string, any]) => {
+												let zodType: z.ZodType;
 
-											switch (prop.type) {
-												case 'string':
-													zodType = z.string();
-													break;
-												case 'number':
-													zodType = z.number();
-													break;
-												case 'integer':
-													zodType = z.number().int();
-													break;
-												case 'boolean':
-													zodType = z.boolean();
-													break;
-												case 'array':
-													if (prop.items?.type === 'string') {
-														zodType = z.array(z.string());
-													} else if (prop.items?.type === 'number') {
-														zodType = z.array(z.number());
-													} else if (prop.items?.type === 'boolean') {
-														zodType = z.array(z.boolean());
-													} else {
-														zodType = z.array(z.any());
-													}
-													break;
-												case 'object':
-													zodType = z.record(z.string(), z.any());
-													break;
-												default:
-													zodType = z.any();
-											}
+												switch (prop.type) {
+													case 'string':
+														zodType = z.string();
+														break;
+													case 'number':
+														zodType = z.number();
+														break;
+													case 'integer':
+														zodType = z.number().int();
+														break;
+													case 'boolean':
+														zodType = z.boolean();
+														break;
+													case 'array':
+														if (prop.items?.type === 'string') {
+															zodType = z.array(z.string());
+														} else if (prop.items?.type === 'number') {
+															zodType = z.array(z.number());
+														} else if (prop.items?.type === 'boolean') {
+															zodType = z.array(z.boolean());
+														} else {
+															zodType = z.array(z.any());
+														}
+														break;
+													case 'object':
+														zodType = z.record(z.string(), z.any());
+														break;
+													default:
+														zodType = z.any();
+												}
 
-											if (prop.description) {
-												zodType = zodType.describe(prop.description);
-											}
+												if (prop.description) {
+													zodType = zodType.describe(prop.description);
+												}
 
-											if (!tool.inputSchema?.required?.includes(key)) {
-												zodType = zodType.optional();
-											}
+												if (!tool.inputSchema?.required?.includes(key)) {
+													zodType = zodType.optional();
+												}
 
-											return {
-												...acc,
-												[key]: zodType,
-											};
-										},
-										{},
+												return {
+													...acc,
+													[key]: zodType,
+												};
+											},
+											{},
+										),
 									),
-								).optional(),
-								params: z.object(
-									Object.entries(tool.inputSchema.properties).reduce(
-										(acc: any, [key, prop]: [string, any]) => {
-											let zodType: z.ZodType;
+								}),
+								z.object({
+									name: z.string(),
+									params: z.object(
+										Object.entries(tool.inputSchema.properties).reduce(
+											(acc: any, [key, prop]: [string, any]) => {
+												let zodType: z.ZodType;
 
-											switch (prop.type) {
-												case 'string':
-													zodType = z.string();
-													break;
-												case 'number':
-													zodType = z.number();
-													break;
-												case 'integer':
-													zodType = z.number().int();
-													break;
-												case 'boolean':
-													zodType = z.boolean();
-													break;
-												case 'array':
-													if (prop.items?.type === 'string') {
-														zodType = z.array(z.string());
-													} else if (prop.items?.type === 'number') {
-														zodType = z.array(z.number());
-													} else if (prop.items?.type === 'boolean') {
-														zodType = z.array(z.boolean());
-													} else {
-														zodType = z.array(z.any());
-													}
-													break;
-												case 'object':
-													zodType = z.record(z.string(), z.any());
-													break;
-												default:
-													zodType = z.any();
-											}
+												switch (prop.type) {
+													case 'string':
+														zodType = z.string();
+														break;
+													case 'number':
+														zodType = z.number();
+														break;
+													case 'integer':
+														zodType = z.number().int();
+														break;
+													case 'boolean':
+														zodType = z.boolean();
+														break;
+													case 'array':
+														if (prop.items?.type === 'string') {
+															zodType = z.array(z.string());
+														} else if (prop.items?.type === 'number') {
+															zodType = z.array(z.number());
+														} else if (prop.items?.type === 'boolean') {
+															zodType = z.array(z.boolean());
+														} else {
+															zodType = z.array(z.any());
+														}
+														break;
+													case 'object':
+														zodType = z.record(z.string(), z.any());
+														break;
+													default:
+														zodType = z.any();
+												}
 
-											if (prop.description) {
-												zodType = zodType.describe(prop.description);
-											}
+												if (prop.description) {
+													zodType = zodType.describe(prop.description);
+												}
 
-											if (!tool.inputSchema?.required?.includes(key)) {
-												zodType = zodType.optional();
-											}
+												if (!tool.inputSchema?.required?.includes(key)) {
+													zodType = zodType.optional();
+												}
 
-											return {
-												...acc,
-												[key]: zodType,
-											};
-										},
-										{},
+												return {
+													...acc,
+													[key]: zodType,
+												};
+											},
+											{},
+										),
 									),
-								).optional(),
-							})
+								}),
+							])
 							: z.object({});
 
 						new DynamicStructuredTool({
