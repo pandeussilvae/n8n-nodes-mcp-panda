@@ -528,7 +528,7 @@ export class McpClient implements INodeType {
 										arguments: params,
 									}, CallToolResultSchema, requestOptions);
 
-									return typeof result === 'object' ? JSON.stringify(result) : String(result);
+									return result;
 								} catch (error) {
 									throw new NodeOperationError(
 										this.getNode(),
