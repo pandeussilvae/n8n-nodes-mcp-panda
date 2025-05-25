@@ -531,6 +531,8 @@ export class McpClient implements INodeType {
 											toolParams = params.tool_parameters;
 										} else if ('parameters' in params) {
 											toolParams = params.parameters;
+										} else if ('params' in params && 'name' in params) {
+											toolParams = params.params;
 										} else {
 											toolParams = params;
 										}
