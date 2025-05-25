@@ -428,15 +428,37 @@ export class McpClient implements INodeType {
 
 				case 'listTools': {
 					const rawTools = await client.listTools();
-					const tools = Array.isArray(rawTools)
-						? rawTools
-						: Array.isArray(rawTools?.tools)
-							? rawTools.tools
-							: Object.values(rawTools?.tools || {});
+
+					// Ensure we have a proper object, not a string
+					let parsedTools;
+					if (typeof rawTools === 'string') {
+						try {
+							parsedTools = JSON.parse(rawTools);
+						} catch (error) {
+							throw new NodeOperationError(
+								this.getNode(),
+								`Failed to parse tools response: ${(error as Error).message}`,
+							);
+						}
+					} else {
+						parsedTools = rawTools;
+					}
+
+					// Extract tools array from the response
+					const tools = Array.isArray(parsedTools)
+						? parsedTools
+						: Array.isArray(parsedTools?.tools)
+							? parsedTools.tools
+							: Array.isArray(parsedTools?.result?.tools)
+								? parsedTools.result.tools
+								: Object.values(parsedTools?.tools || {});
 
 					if (!tools.length) {
 						throw new NodeOperationError(this.getNode(), 'No tools found from MCP client');
 					}
+
+					// Log the tools for debugging
+					this.logger.debug(`Received tools: ${JSON.stringify(tools, null, 2)}`);
 
 					const aiTools = tools.map((tool: any) => {
 						// Create a DynamicStructuredTool for execution
@@ -517,13 +539,21 @@ export class McpClient implements INodeType {
 						});
 					});
 
+					// Ensure we're returning the original schema from the MCP server
+					const toolsResponse = tools.map((tool: any) => {
+						// Log each tool's schema for debugging
+						this.logger.debug(`Tool ${tool.name} schema: ${JSON.stringify(tool.inputSchema, null, 2)}`);
+
+						return {
+							name: tool.name,
+							description: tool.description,
+							schema: tool.inputSchema || {},
+						};
+					});
+
 					returnData.push({
 						json: {
-							tools: tools.map((tool: any) => ({
-								name: tool.name,
-								description: tool.description,
-								schema: tool.inputSchema || {},
-							})),
+							tools: toolsResponse,
 						},
 					});
 					break;
